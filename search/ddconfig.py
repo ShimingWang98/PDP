@@ -8,12 +8,12 @@ class DDConfig:
 
     def __init__(self,
                  c=0.1,
-
+                 N = 0,
                  n_final=200_000_000,
                  # prediction_batch_size=10_000,
                  # training_batch_size=100_000,
                  prediction_batch_size=10_000,
-                 training_batch_size=100000,
+                 training_batch_size=100_000,
                  n_processes=multiprocessing.cpu_count(),
                  confidence=0.9):
         """
@@ -34,10 +34,12 @@ class DDConfig:
         self.c = c
         self.n_final = n_final
 
-        self.w = 0.005
-        self.alpha = 0.05
-        param = ss.erfinv(1 - 2 * self.alpha) ** 2
-        N = int(max(2 * (1 - c) / (self.w ** 2 * c), 8 * (1 - c) / c) * param)
+        # if the number of samples is not given, then choose N according to guideline 1
+        if N == 0:
+            self.w = 0.005
+            self.alpha = 0.05
+            param = ss.erfinv(1 - 2 * self.alpha) ** 2
+            N = int(max(2 * (1 - c) / (self.w ** 2 * c), 8 * (1 - c) / c) * param)
         self.n_train = N
         self.n = N
         self.n_check = N
