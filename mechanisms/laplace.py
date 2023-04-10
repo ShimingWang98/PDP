@@ -16,6 +16,8 @@ class LaplaceMechanism(Mechanism):
         Args:
             fun: The function performed before adding noise. The function must accept a 1d array and produce a scalar.
             eps: target epsilon
+            r: parameter in practical differential privacy, decided by eps and c
+            c: if eps and r are given, no need to assign c anymore
         """
         self.fun = fun
         self.scale = 1.0 / eps
@@ -24,11 +26,12 @@ class LaplaceMechanism(Mechanism):
         # r will change according to c and eps
         self.r = r
 
-    # original laplace
     def m(self, a, n_samples: int = 1):
+        # original laplace
         if self.original:
             loc = self.fun(a)
             return np.random.laplace(loc=loc, scale=self.scale, size=n_samples)
+        # practical laplace
         else:
             loc = self.fun(a)
             result = practical_continuous_laplace(b=self.scale, r=self.r, size = n_samples)
@@ -41,29 +44,24 @@ class LaplaceMechanism(Mechanism):
     #     result = np.random.uniform(low=-self.scale, high=self.scale, size=n_samples)
     #     return result+loc
 
-    def _test_original_utility(self, n_samples):
-        result = np.random.laplace(scale=self.scale, size=n_samples)
+    def test_utility(self, n_samples=1000000):
+        if self.original:
+            noise = np.random.laplace(scale=self.scale, size=n_samples)
+        else:
+            noise = practical_continuous_laplace(b=self.scale, r=self.r, size=n_samples)
         # noise between [-0.1, 0.1]
-        new_result = result[np.where(abs(result) <= 0.1)]
+        truncated_noise = noise[np.where(abs(noise) <= 0.1)]
         # the ratio of noise between [-0.1, 0.1]
-        ratio = len(new_result)/n_samples
-        print("original ratio: ",ratio)
+        ratio = len(truncated_noise)/n_samples
+        print("truncated ratio: ",ratio)
         # variance of noise
-        var = np.var(result)
-        print("original utility: ",var)
+        var = np.var(noise)
+        print("utility: ",var)
+        return var
 
-    def _test_practical_utility(self, n_samples):
-        result = practical_continuous_laplace(b=self.scale, r=self.r, size = n_samples)
-        # result = np.random.uniform(low=-self.scale, high=self.scale, size=n_samples)
-        new_result = result[np.where(abs(result) <= 0.1)]
-        ratio = len(new_result) / n_samples
-        print("practical ratio: ", ratio)
-        var = np.var(result)
-        print("practical utility: ",var)
 
 
 if __name__ == '__main__':
     mechanism = LaplaceMechanism()
     n_samples = 1000000
-    mechanism._test_original_utility(n_samples)
-    # mechanism._test_practical_utility(n_samples)
+    mechanism.test_utility(n_samples)
