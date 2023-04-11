@@ -16,7 +16,7 @@ python example.py --eps=0.1
 This commands stores temporary outputs and log files to the folder
 `example_outputs` of the current working directory.
 
-If you want to test the privacy of the practical Laplace mechanism, the command is as follow:
+If you want to test the ablation privacy study on varying $c$ of the practical Laplace mechanism, the command is as follow:
 
 ```bash
 python example.py --eps=0.1 --c_prime=0.1 --eps=2 --r=1.76
